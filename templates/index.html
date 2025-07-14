@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Genuino Uno - Modern Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    :root {
+      --primary: #ff6f61;
+      --accent: #29b6f6;
+      --background: #000000;
+      --card-bg: #1a1a1a;
+      --shadow: rgba(0, 0, 0, 0.6);
+      --border: #333;
+      --success: #4caf50;
+      --warning: #ff9800;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #000000, #0f0f0f, #1a1a1a);
+      color: #ffffff;
+      padding: 20px;
+      min-height: 100vh;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    header {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 20px 30px;
+      box-shadow: 0 10px 25px var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .logo h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-shadow: 0 0 20px rgba(255, 111, 97, 0.5);
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 20px;
+    }
+
+    .status-item {
+      background: var(--accent);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: 0 5px 15px rgba(41, 182, 246, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 15px 30px var(--shadow);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px var(--shadow);
+    }
+
+    .card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title i {
+      font-size: 1.5rem;
+      opacity: 0.8;
+    }
+
+    .value-display {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 15px;
+      color: var(--accent);
+      text-shadow: 0 0 15px rgba(41, 182, 246, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .gauge {
+      background: #333;
+      border-radius: 10px;
+      height: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .gauge::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: gaugeShimmer 2s infinite;
+    }
+
+    @keyframes gaugeShimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .gauge-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 10px;
+      transition: width 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 220px;
+      margin-top: 15px;
+      background: #111;
+      border-radius: 15px;
+      padding: 15px;
+      border: 1px solid #333;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .control-btn {
+      background: var(--primary);
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(255, 111, 97, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .control-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s ease, height 0.3s ease;
+    }
+
+    .control-btn:hover::before {
+      width: 100%;
+      height: 100%;
+    }
+
+    .control-btn:hover {
+      background: #f44336;
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(255, 111, 97, 0.5);
+    }
+
+    .control-btn.on {
+      background: var(--success);
+      box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .control-btn.on:hover {
+      background: #45a049;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .sensor-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      text-align: center;
+      padding: 15px;
+      box-shadow: 0 5px 15px var(--shadow);
+      transition: transform 0.2s ease;
+      border: 1px solid #333;
+    }
+
+    .sensor-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+    }
+
+    .sensor-label {
+      font-size: 0.9rem;
+      color: #bbb;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .sensor-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-shadow: 0 0 10px rgba(41, 182, 246, 0.3);
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: 10px;
+      animation: blink 1.5s infinite;
+    }
+
+    .status-indicator.offline {
+      background: var(--warning);
+      box-shadow: 0 0 10px var(--warning);
+    }
+
+    /* Buzzer and Alert Styles */
+    .alert-indicator {
+      display: none;
+      background: linear-gradient(45deg, #ff1744, #ff5722);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-left: auto;
+      animation: alertPulse 1s infinite;
+      box-shadow: 0 0 20px rgba(255, 23, 68, 0.5);
+    }
+
+    .alert-indicator.active {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    @keyframes alertPulse {
+      0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(255, 23, 68, 0.5);
+      }
+      50% { 
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(255, 23, 68, 0.8);
+      }
+    }
+
+    .card.alert-active {
+      border: 2px solid #ff1744;
+      box-shadow: 0 0 30px rgba(255, 23, 68, 0.3);
+      animation: cardAlert 2s infinite;
+    }
+
+    @keyframes cardAlert {
+      0%, 100% { border-color: #ff1744; }
+      50% { border-color: #ff5722; }
+    }
+
+    .buzzer-btn {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .buzzer-btn.active {
+      background: #ff1744;
+      animation: buzzerActive 0.5s infinite;
+    }
+
+    .buzzer-btn.active:hover {
+      background: #d50000;
+    }
+
+    @keyframes buzzerActive {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .temperature-warning {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #ff1744, #ff5722);
+      color: white;
+      padding: 30px 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      animation: warningModal 0.5s ease;
+      border: 3px solid #fff;
+    }
+
+    @keyframes warningModal {
+      0% { 
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+      }
+      100% { 
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .temperature-warning i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      animation: warningIcon 1s infinite;
+    }
+
+    @keyframes warningIcon {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+
+    .warning-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1999;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.3; }
+    }
+
+    .loading-animation {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #333;
+      border-top: 2px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <h1><i class="fas fa-microchip"></i> Genuino Uno</h1>
+      </div>
+      <div class="status-bar">
+        <div class="status-item">
+          <i class="fas fa-wifi"></i> Connected
+          <span class="status-indicator online"></span>
+        </div>
+        <div class="status-item">
+          <i class="fas fa-shield-alt"></i> Secure
+        </div>
+        <div class="status-item">
+          <i class="fas fa-clock"></i> Live Data
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card" id="temp-card-container">
+        <div class="card-title">
+          <i class="fas fa-thermometer-half"></i>
+          Temperature
+          <div class="alert-indicator" id="temp-alert">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>LOW TEMP ALERT!</span>
+          </div>
+        </div>
+        <div class="value-display" id="temp">25°C</div>
+        <div class="gauge"><div class="gauge-fill" id="temp-gauge" style="width: 60%"></div></div>
+        <div class="chart-container">
+          <canvas id="tempChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <i class="fas fa-tint"></i>
+          Humidity
+        </div>
+        <div class="value-display" id="hum">65%</div>
+        <div class="gauge"><div class="gauge-fill" id="hum-gauge" style="width: 65%"></div></div>
+        <div class="chart-container">
+          <canvas id="humChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <i class="fas fa-cloud"></i>
+          Gas Level
+        </div>
+        <div class="value-display" id="gas">340</div>
+        <div class="gauge"><div class="gauge-fill" id="gas-gauge" style="width: 40%"></div></div>
+        <div class="chart-container">
+          <canvas id="gasChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <i class="fas fa-sun"></i>
+          Light Level
+        </div>
+        <div class="value-display" id="ldr">780</div>
+        <div class="gauge"><div class="gauge-fill" id="ldr-gauge" style="width: 78%"></div></div>
+        <div class="chart-container">
+          <canvas id="ldrChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card full-width">
+        <div class="card-title">
+          <i class="fas fa-sliders-h"></i>
+          Device Controls
+        </div>
+        <div class="controls">
+          <button class="control-btn" onclick="toggleLED(1, this)">
+            <i class="fas fa-lightbulb"></i> LED 1
+          </button>
+          <button class="control-btn" onclick="toggleLED(2, this)">
+            <i class="fas fa-lightbulb"></i> LED 2
+          </button>
+          <button class="control-btn" onclick="sendCommand('Ac_ON')">
+            <i class="fas fa-Ac"></i> Ac ON
+          </button>
+          <button class="control-btn" onclick="sendCommand('Ac_OFF')">
+            <i class="fas fa-stop"></i> Ac OFF
+          </button>
+          <button class="control-btn buzzer-btn" onclick="toggleBuzzer(this)" id="buzzer-btn">
+            <i class="fas fa-volume-up"></i> Buzzer OFF
+          </button>
+          <button class="control-btn" onclick="testBuzzer()">
+            <i class="fas fa-bell"></i> Test Buzzer
+          </button>
+        </div>
+
+        <div class="sensor-grid">
+          <div class="sensor-card">
+            <div class="sensor-label"><i class="fas fa-thermometer-half"></i> Temp</div>
+            <div class="sensor-value" id="temp-card">25°C</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-label"><i class="fas fa-tint"></i> Humidity</div>
+            <div class="sensor-value" id="hum-card">65%</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-label"><i class="fas fa-cloud"></i> Gas</div>
+            <div class="sensor-value" id="gas-card">340</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-label"><i class="fas fa-sun"></i> Light</div>
+            <div class="sensor-value" id="ldr-card">780</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Chart configurations
+    const chartConfig = {
+      type: 'line',
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            display: true,
+            grid: {
+              color: '#333',
+              drawBorder: false
+            },
+            ticks: {
+              color: '#888',
+              maxTicksLimit: 6
+            }
+          },
+          y: {
+            display: true,
+            grid: {
+              color: '#333',
+              drawBorder: false
+            },
+            ticks: {
+              color: '#888'
+            }
+          }
+        },
+        elements: {
+          point: {
+            radius: 0,
+            hoverRadius: 6
+          },
+          line: {
+            borderWidth: 3,
+            tension: 0.4
+          }
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeInOutQuart'
+        }
+      }
+    };
+
+    // Initialize charts
+    const tempChart = new Chart(document.getElementById('tempChart'), {
+      ...chartConfig,
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Temperature',
+          data: [],
+          borderColor: '#ff6f61',
+          backgroundColor: 'rgba(255, 111, 97, 0.1)',
+          fill: true
+        }]
+      }
+    });
+
+    const humChart = new Chart(document.getElementById('humChart'), {
+      ...chartConfig,
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Humidity',
+          data: [],
+          borderColor: '#29b6f6',
+          backgroundColor: 'rgba(41, 182, 246, 0.1)',
+          fill: true
+        }]
+      }
+    });
+
+    const gasChart = new Chart(document.getElementById('gasChart'), {
+      ...chartConfig,
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Gas Level',
+          data: [],
+          borderColor: '#ff9800',
+          backgroundColor: 'rgba(255, 152, 0, 0.1)',
+          fill: true
+        }]
+      }
+    });
+
+    const ldrChart = new Chart(document.getElementById('ldrChart'), {
+      ...chartConfig,
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Light Level',
+          data: [],
+          borderColor: '#4caf50',
+          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+          fill: true
+        }]
+      }
+    });
+
+    // Sensor data simulation
+    let sensorData = {
+      temp: 25,
+      hum: 65,
+      gas: 340,
+      ldr: 780
+    };
+
+    // Data arrays for charts
+    const maxDataPoints = 20;
+    let timeLabels = [];
+    let tempData = [];
+    let humData = [];
+    let gasData = [];
+    let ldrData = [];
+
+    // Initialize with some data
+    for (let i = 0; i < maxDataPoints; i++) {
+      const time = new Date(Date.now() - (maxDataPoints - i) * 2000);
+      timeLabels.push(time.toLocaleTimeString());
+      tempData.push(sensorData.temp + (Math.random() - 0.5) * 4);
+      humData.push(sensorData.hum + (Math.random() - 0.5) * 10);
+      gasData.push(sensorData.gas + (Math.random() - 0.5) * 50);
+      ldrData.push(sensorData.ldr + (Math.random() - 0.5) * 200);
+    }
+
+    // Update charts with initial data
+    tempChart.data.labels = [...timeLabels];
+    tempChart.data.datasets[0].data = [...tempData];
+    tempChart.update('none');
+
+    humChart.data.labels = [...timeLabels];
+    humChart.data.datasets[0].data = [...humData];
+    humChart.update('none');
+
+    gasChart.data.labels = [...timeLabels];
+    gasChart.data.datasets[0].data = [...gasData];
+    gasChart.update('none');
+
+    ldrChart.data.labels = [...timeLabels];
+    ldrChart.data.datasets[0].data = [...ldrData];
+    ldrChart.update('none');
+
+    // Update sensor values with smooth animation
+    function updateSensorValue(elementId, value, unit = '') {
+      const element = document.getElementById(elementId);
+      const currentValue = parseFloat(element.textContent) || 0;
+      const targetValue = value;
+      const duration = 1000;
+      const startTime = Date.now();
+
+      function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+        
+        const interpolatedValue = currentValue + (targetValue - currentValue) * easedProgress;
+        element.textContent = Math.round(interpolatedValue * 10) / 10 + unit;
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      }
+      animate();
+    }
+
+    // Update gauge with animation
+    function updateGauge(gaugeId, percentage) {
+      const gauge = document.getElementById(gaugeId);
+      gauge.style.width = percentage + '%';
+    }
+
+    // Fetch real sensor data from Flask backend
+    async function fetchSensorData() {
+      try {
+        const response = await fetch('/get-sensor-data');
+        const data = await response.json();
+        
+        if (data.error) {
+          console.warn('Arduino not connected, using simulation data');
+          // Fallback to simulation when Arduino is disconnected
+          generateSimulatedData();
+          updateConnectionStatus(false);
+          return;
+        }
+        
+        // Update with real Arduino data
+        sensorData.temp = data.temp || sensorData.temp;
+        sensorData.hum = data.hum || sensorData.hum;
+        sensorData.gas = data.gas || sensorData.gas;
+        sensorData.ldr = data.ldr || sensorData.ldr;
+        
+        updateConnectionStatus(true);
+        
+      } catch (error) {
+        console.error('Failed to fetch sensor data:', error);
+        // Fallback to simulation on network error
+        generateSimulatedData();
+        updateConnectionStatus(false);
+      }
+    }
+
+    // Simulation fallback function
+    function generateSimulatedData() {
+      sensorData.temp += (Math.random() - 0.5) * 2;
+      sensorData.temp = Math.max(15, Math.min(40, sensorData.temp));
+      
+      sensorData.hum += (Math.random() - 0.5) * 5;
+      sensorData.hum = Math.max(30, Math.min(95, sensorData.hum));
+      
+      sensorData.gas += (Math.random() - 0.5) * 20;
+      sensorData.gas = Math.max(200, Math.min(800, sensorData.gas));
+      
+      sensorData.ldr += (Math.random() - 0.5) * 100;
+      sensorData.ldr = Math.max(100, Math.min(1000, sensorData.ldr));
+    }
+
+    // Update connection status indicator
+    function updateConnectionStatus(isConnected) {
+      const statusIndicator = document.querySelector('.status-indicator');
+      const statusText = statusIndicator.parentElement;
+      
+      if (isConnected) {
+        statusIndicator.className = 'status-indicator online';
+        statusText.innerHTML = '<i class="fas fa-wifi"></i> Connected <span class="status-indicator online"></span>';
+      } else {
+        statusIndicator.className = 'status-indicator offline';
+        statusText.innerHTML = '<i class="fas fa-wifi"></i> Simulation Mode <span class="status-indicator offline"></span>';
+      }
+    }
+
+    // Buzzer and temperature monitoring system
+    let buzzerEnabled = false;
+    let temperatureAlert = false;
+    let alertShown = false;
+
+    // Main update function
+    async function updateSensorData() {
+      await fetchSensorData();
+
+      // Check temperature threshold and trigger buzzer
+      checkTemperatureAlert();
+
+      // Update displays
+      updateSensorValue('temp', sensorData.temp, '°C');
+      updateSensorValue('hum', sensorData.hum, '%');
+      updateSensorValue('gas', sensorData.gas);
+      updateSensorValue('ldr', sensorData.ldr);
+
+      updateSensorValue('temp-card', sensorData.temp, '°C');
+      updateSensorValue('hum-card', sensorData.hum, '%');
+      updateSensorValue('gas-card', sensorData.gas);
+      updateSensorValue('ldr-card', sensorData.ldr);
+
+      // Update gauges
+      updateGauge('temp-gauge', (sensorData.temp / 40) * 100);
+      updateGauge('hum-gauge', sensorData.hum);
+      updateGauge('gas-gauge', (sensorData.gas / 800) * 100);
+      updateGauge('ldr-gauge', (sensorData.ldr / 1000) * 100);
+
+      // Update chart data
+      const currentTime = new Date().toLocaleTimeString();
+      
+      // Add new data point
+      timeLabels.push(currentTime);
+      tempData.push(sensorData.temp);
+      humData.push(sensorData.hum);
+      gasData.push(sensorData.gas);
+      ldrData.push(sensorData.ldr);
+
+      // Remove old data points
+      if (timeLabels.length > maxDataPoints) {
+        timeLabels.shift();
+        tempData.shift();
+        humData.shift();
+        gasData.shift();
+        ldrData.shift();
+      }
+
+      // Update charts
+      tempChart.data.labels = [...timeLabels];
+      tempChart.data.datasets[0].data = [...tempData];
+      tempChart.update('active');
+
+      humChart.data.labels = [...timeLabels];
+      humChart.data.datasets[0].data = [...humData];
+      humChart.update('active');
+
+      gasChart.data.labels = [...timeLabels];
+      gasChart.data.datasets[0].data = [...gasData];
+      gasChart.update('active');
+
+      ldrChart.data.labels = [...timeLabels];
+      ldrChart.data.datasets[0].data = [...ldrData];
+      ldrChart.update('active');
+    }
+
+    // Temperature alert system
+    function checkTemperatureAlert() {
+      const tempThreshold = 25;
+      const isLowTemp = sensorData.temp < tempThreshold;
+      
+      if (isLowTemp && !temperatureAlert) {
+        // Temperature just dropped below threshold
+        temperatureAlert = true;
+        activateTemperatureAlert();
+        
+        if (buzzerEnabled) {
+          triggerBuzzer();
+        }
+        
+      } else if (!isLowTemp && temperatureAlert) {
+        // Temperature is back to normal
+        temperatureAlert = false;
+        deactivateTemperatureAlert();
+        stopBuzzer();
+      }
+    }
+
+    // Activate visual temperature alert
+    function activateTemperatureAlert() {
+      const tempCard = document.getElementById('temp-card-container');
+      const alertIndicator = document.getElementById('temp-alert');
+      
+      tempCard.classList.add('alert-active');
+      alertIndicator.classList.add('active');
+      
+      showNotification(`⚠️ LOW TEMPERATURE: ${sensorData.temp.toFixed(1)}°C`, 'error');
+      
+      // Show modal warning if not shown recently
+      if (!alertShown) {
+        showTemperatureWarning();
+        alertShown = true;
+        setTimeout(() => { alertShown = false; }, 30000); // Reset after 30 seconds
+      }
+    }
+
+    // Deactivate visual temperature alert
+    function deactivateTemperatureAlert() {
+      const tempCard = document.getElementById('temp-card-container');
+      const alertIndicator = document.getElementById('temp-alert');
+      
+      tempCard.classList.remove('alert-active');
+      alertIndicator.classList.remove('active');
+      
+      showNotification(`✅ Temperature Normal: ${sensorData.temp.toFixed(1)}°C`, 'success');
+    }
+
+    // Show temperature warning modal
+    function showTemperatureWarning() {
+      const overlay = document.createElement('div');
+      overlay.className = 'warning-overlay';
+      
+      const modal = document.createElement('div');
+      modal.className = 'temperature-warning';
+      modal.innerHTML = `
+        <i class="fas fa-thermometer-empty"></i>
+        <div>TEMPERATURE ALERT</div>
+        <div style="font-size: 1.5rem; margin: 10px 0;">${sensorData.temp.toFixed(1)}°C</div>
+        <div style="font-size: 0.9rem; margin-bottom: 20px;">Temperature below 25°C threshold</div>
+        <button onclick="closeWarningModal()" style="
+          background: white;
+          color: #ff1744;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 25px;
+          font-weight: 700;
+          cursor: pointer;
+        ">OK</button>
+      `;
+      
+      document.body.appendChild(overlay);
+      document.body.appendChild(modal);
+      
+      // Auto close after 10 seconds
+      setTimeout(() => {
+        closeWarningModal();
+      }, 10000);
+    }
+
+    // Close warning modal
+    function closeWarningModal() {
+      const overlay = document.querySelector('.warning-overlay');
+      const modal = document.querySelector('.temperature-warning');
+      if (overlay) overlay.remove();
+      if (modal) modal.remove();
+    }
+
+    // Buzzer control functions
+    async function toggleBuzzer(element) {
+      buzzerEnabled = !buzzerEnabled;
+      
+      const icon = buzzerEnabled ? 'volume-up' : 'volume-mute';
+      const text = buzzerEnabled ? 'ON' : 'OFF';
+      
+      element.innerHTML = `<i class="fas fa-${icon}"></i> Buzzer ${text}`;
+      element.classList.toggle('active', buzzerEnabled);
+      
+      const command = buzzerEnabled ? 'BUZZER_ENABLE' : 'BUZZER_DISABLE';
+      await sendCommand(command);
+      
+      showNotification(`Buzzer ${buzzerEnabled ? 'Enabled' : 'Disabled'}`, 'info');
+    }
+
+    // Trigger buzzer when temperature is low
+    async function triggerBuzzer() {
+      if (buzzerEnabled) {
+        await sendCommand('BUZZER_ON');
+        showNotification('🔊 Buzzer Activated - Low Temperature!', 'error');
+      }
+    }
+
+    // Stop buzzer
+    async function stopBuzzer() {
+      await sendCommand('BUZZER_OFF');
+    }
+
+    // Test buzzer function
+    async function testBuzzer() {
+      showNotification('Testing buzzer...', 'info');
+      await sendCommand('BUZZER_TEST');
+      
+      // Visual feedback
+      const testBtn = event.target;
+      testBtn.style.transform = 'scale(0.95)';
+      testBtn.innerHTML = '<i class="fas fa-bell"></i> Testing...';
+      
+      setTimeout(() => {
+        testBtn.style.transform = '';
+        testBtn.innerHTML = '<i class="fas fa-bell"></i> Test Buzzer';
+      }, 2000);
+    }
+
+    // Enhanced control functions with Flask backend integration
+    async function toggleLED(ledNumber, element) {
+      const isOn = element.classList.contains('on');
+      const newState = !isOn;
+      
+      element.classList.toggle('on', newState);
+      element.innerHTML = `<i class="fas fa-lightbulb"></i> LED ${ledNumber} ${newState ? 'ON' : 'OFF'}`;
+      
+      // Add click animation
+      element.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        element.style.transform = '';
+      }, 150);
+      
+      await sendCommand(`LED${ledNumber}_${newState ? 'ON' : 'OFF'}`);
+    }
+
+    async function sendCommand(cmd) {
+      try {
+        const response = await fetch('/send-command', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ command: cmd })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          console.log("✅ Command sent successfully:", result.message);
+          showNotification(`Command sent: ${cmd}`, 'success');
+        } else {
+          console.error("❌ Command failed:", result.message);
+          showNotification(`Failed: ${result.message}`, 'error');
+        }
+        
+      } catch (error) {
+        console.error("❌ Network error:", error);
+        showNotification('Network error - check connection', 'error');
+      }
+    }
+
+    // Add notification system
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 1000;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        ${type === 'success' ? 'background: #4caf50;' : ''}
+        ${type === 'error' ? 'background: #f44336;' : ''}
+        ${type === 'info' ? 'background: #29b6f6;' : ''}
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Animate in
+      setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+      }, 10);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Start real-time updates
+    setInterval(updateSensorData, 2000);
+
+    // Add some initial animation delays for a staggered effect
+    setTimeout(() => {
+      document.querySelectorAll('.card').forEach((card, index) => {
+        card.style.animation = `fadeInUp 0.6s ease ${index * 0.1}s both`;
+      });
+    }, 100);
+
+    // CSS for fade in animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
